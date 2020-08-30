@@ -1,0 +1,10 @@
+{
+    "compilerOptions": {
+      "target": "es5", // компилируем ts код в js код версии ES5
+      "module": "esnext", // для поддержки динамического импорта модулей
+      "experimentalDecorators": true
+    },
+    "files": [
+      "./src/index.ts"
+    ]
+}

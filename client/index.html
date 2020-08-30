@@ -1,0 +1,49 @@
+<html>
+    <head>
+        <meta charset="utf8">
+        <title>AnChat</title>
+        <script src="dist/haman.min.js"></script>
+    </head>
+    <body>
+        <div id="app">
+            <div class="messages">
+
+            </div>
+            <input type="text" placeholder="Message" id="msg">
+            <button id="send">Send</button>
+        </div>
+        <script>
+
+            let animals = ["Собака", "Кошка", "Крокодил", "Кролик", "Жираф"];
+            let code = Math.random().toString().substr(3,5);
+
+            let user = animals[getRandomArbitrary(0, animals.length-1)] + "-" + code;
+
+            let haman = new Haman('http://127.0.0.1:7777');
+            haman.subscribe("message", (data) => {
+                document.querySelector(".messages").innerHTML += '<div class="msg"><p><strong>'+data.user+'</strong>: '+data.message+'</p></div>';
+            });
+            haman.subscribe("userConnect", (data) => {
+                document.querySelector(".messages").innerHTML += '<div class="msg"><strong>'+data+' вошел в чат</strong></div>';
+            });
+            haman.connect();
+
+            haman.broadcast("userConnect", user);
+            document.querySelector(".messages").innerHTML += '<div class="msg"><strong>'+user+' вошел в чат</strong></div>';
+
+            document.querySelector("#send").onclick = () => {
+                let text = document.querySelector("#msg").value;
+                if(text.trim() === ''){
+                    return;
+                }
+                document.querySelector(".messages").innerHTML += '<div class="msg"><p><strong>'+user+'</strong>: '+text+'</p></div>';
+                haman.broadcast("message", {user: user, message: text});
+                document.querySelector("#msg").value = '';
+            };
+            
+            function getRandomArbitrary(min, max) {
+                return Math.floor(Math.random() * (max - min + 1)) + min;
+            }
+        </script>
+    </body>
+</html>
