@@ -34,8 +34,13 @@ export default class Haman {
     public subscribe(event : string, callback : Function) : void {
         this.eventBus.pushEvent(event, callback);
     }
+    
+    public send(event : string, data: any) : void {
+        let encoded = btoa(encodeURIComponent(JSON.stringify({event: event, data: data})));
+        Net.process(this.host + '/' + this.key + '/push/' + encoded);
+    }
 
-    public broadcast(event : string, data: any){
+    public broadcast(event : string, data: any) : void {
         let encoded = btoa(encodeURIComponent(JSON.stringify({event: event, data: data})));
         Net.process(this.host + '/' + this.key + '/broadcast/' + encoded);
     }
