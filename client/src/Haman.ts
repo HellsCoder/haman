@@ -16,7 +16,7 @@ export default class Haman {
         this.longPoolBridge = new Bridge(this.host, this.key);
     }
 
-    private genKey(){
+    private genKey() : string {
         let result = '';
         let characters = 'abcdefmo0123456789';
         let charactersLength = characters.length;
@@ -26,7 +26,7 @@ export default class Haman {
         return btoa(result + '.' + Math.floor((new Date().getTime()/1000)) + '.' + Math.random().toString(36).substr(2));
     }
 
-    public connect(){
+    public connect() : void {
         console.info("key connect " + this.key);
         this.longPoolBridge.connectWhile(this.eventBus);
     }
