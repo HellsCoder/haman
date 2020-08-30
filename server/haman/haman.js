@@ -9,6 +9,8 @@ const eventBus = require('./connect/eventBus')();
 module.exports = listen = (app) => {
     console.info("Haman listening express port");
 
+    const events = [];
+
     function atob(data){
         return decodeURIComponent(Buffer.from(data, 'base64').toString());
     }
@@ -22,6 +24,23 @@ module.exports = listen = (app) => {
         res.header('Access-Control-Allow-Credentials', true);
         res.header('Access-Control-Allow-Headers', 'Content-Type');
         next();
+    });
+
+    
+    app.get('/:key/push/:data', function(req, res){
+        let key = req.params.key;
+
+        let data = JSON.parse(atob(req.params.data));
+        let event = data.event;
+
+        for(let i = 0; i < events.length; i++){
+            let currentEvent = events[i];
+            if(currentEvent.event === event){
+                currentEvent.callback(key, data.data);
+            }
+        }
+
+        res.send(200);
     });
 
     app.get('/:key/broadcast/:data', function(req, res){
@@ -64,6 +83,13 @@ module.exports = listen = (app) => {
 
         broadcast: (from, event, data) => {
             eventBus.broadcast(from, event, data);
+        },
+
+        subscribe: (event, callback) => {
+            events.push({
+                event: event, 
+                callback: callback
+            });
         }
     }
 }
