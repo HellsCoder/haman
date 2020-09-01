@@ -26,7 +26,10 @@ npm i
    
    haman.send(key, event, data); //отправить событие конкретному пользователю с ключом key
    haman.broadcast(event, data); //отправить событие всем пользователям
-   haman.subscrube(event, (key, data) => {}); //подписаться на событие от клиента
+   haman.subscrube(event, (connect, data) => {
+    let key = connect.getKey(); //вернет ключ клиента
+    connect.send(event, {key: "123"}); // отправить данные этому подключению  
+   }); //подписаться на событие от клиента
 ```
 # Примеры
 Пример использования уже находится в папке client
