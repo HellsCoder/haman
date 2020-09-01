@@ -36,7 +36,15 @@ module.exports = listen = (app) => {
         for(let i = 0; i < events.length; i++){
             let currentEvent = events[i];
             if(currentEvent.event === event){
-                currentEvent.callback(key, data.data);
+                currentEvent.callback({
+                    getKey: () => {
+                        return key;
+                    },
+
+                    send: (event, data) => {
+                        eventBus.call(key, event, data);
+                    }
+                }, data.data);
             }
         }
 
