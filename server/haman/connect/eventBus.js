@@ -13,6 +13,16 @@ module.exports = EventBus = () => {
             return false;
         },
 
+        containsNoConnected: (key) => {
+            for(let i = 0; i < connectionsQueue.length; i++){
+                let connection = connectionsQueue[i];
+                if(connection.key === key && connection.connected === false){
+                    return true;
+                }
+            }
+            return false;
+        },
+
         terminate: (key) => {
             for(let i = 0; i < connectionsQueue.length; i++){
                 let connection = connectionsQueue[i];
