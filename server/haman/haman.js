@@ -1,5 +1,4 @@
 const config = require('./config');
-const e = require('express');
 
 const eventBus = require('./connect/eventBus')();
 
@@ -17,6 +16,15 @@ module.exports = listen = (app) => {
     
     function btoa(data){
         return Buffer.from(encodeURIComponent(data)).toString('base64');
+    }
+
+    function callEvent(event, data){
+        for(let i = 0; i < events.length; i++){
+            let ev = events[i];
+            if(ev.event === event){
+                ev.callback(data);
+            }
+        }
     }
 
     app.all('*', function(req, res, next) {
@@ -64,9 +72,22 @@ module.exports = listen = (app) => {
     app.get('/:key/updates', function(req, res){
         let key = req.params.key;
         let out;
+
+        if(!eventBus.contains(key)){
+            callEvent("connect", key);
+        }
+
+        req.on("close", () => {
+            eventBus.terminate(key);
+            setTimeout(() => {
+                if(!eventBus.contains(key)){
+                    callEvent("disconnect", key);
+                }
+            }, 500);
+        });
+        
         eventBus.wait(key, (data) => {
             clearTimeout(out);
-            eventBus.terminate(key);
             return res.send(btoa(JSON.stringify({
                 ts: Math.round((new Date().getTime()/1000)),
                 d: {
@@ -76,7 +97,6 @@ module.exports = listen = (app) => {
             })));
         });
         out = setTimeout(() => {
-            eventBus.terminate(key);
             return res.send(btoa(JSON.stringify({
                 ts: Math.round((new Date().getTime()/1000)),
             })));
