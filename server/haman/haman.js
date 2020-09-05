@@ -73,12 +73,9 @@ module.exports = listen = (app) => {
         let key = req.params.key;
         let out;
 
-        if(!eventBus.contains(key)){
-            callEvent("connect", key);
-        }
-
         req.on("close", () => {
             eventBus.terminate(key);
+            clearTimeout(out);
             setTimeout(() => {
                 if(!eventBus.contains(key)){
                     callEvent("disconnect", key);
@@ -96,6 +93,18 @@ module.exports = listen = (app) => {
                 } 
             })));
         });
+        if(!eventBus.containsNoConnected(key)){
+            clearTimeout(out);
+            callEvent("connect", {
+                getKey: () => {
+                    return key;
+                },
+
+                send: (event, data) => {
+                    eventBus.call(key, event, data);
+                }
+            });
+        }
         out = setTimeout(() => {
             return res.send(btoa(JSON.stringify({
                 ts: Math.round((new Date().getTime()/1000)),
