@@ -3,11 +3,24 @@ module.exports = EventBus = () => {
     const connectionsQueue = [];
 
     return {
+        contains: (key) => {
+            for(let i = 0; i < connectionsQueue.length; i++){
+                let connection = connectionsQueue[i];
+                if(connection.key === key){
+                    return true;
+                }
+            }
+            return false;
+        },
+
         terminate: (key) => {
             for(let i = 0; i < connectionsQueue.length; i++){
                 let connection = connectionsQueue[i];
                 if(connection.key === key){
-                    connectionsQueue.splice(i, 1);
+                    connection.connected = false;
+                    setTimeout(() => {
+                        connectionsQueue.splice(i, 1);
+                    }, 500);
                 }
             }
         },
@@ -42,7 +55,8 @@ module.exports = EventBus = () => {
         wait: (key, callback) => {
             connectionsQueue.push({
                 key: key,
-                callback: callback
+                callback: callback,
+                connected: true
             });
         }
     }
