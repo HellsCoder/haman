@@ -2,6 +2,8 @@ const config = require('./config');
 
 const eventBus = require('./connect/eventBus')();
 
+let lastSuccess = [];
+
 /*
     app - express app with listening port
 */
@@ -9,6 +11,27 @@ module.exports = listen = (app) => {
     console.info("Haman listening express port");
 
     const events = [];
+
+    function pushSuccess(key, time){
+        if(lastSuccess.length > 30){
+            lastSuccess = [];
+        }
+        lastSuccess.push({key: key, time: time});
+    }
+
+    function isSuccess(key){
+        for(let i = 0; i < lastSuccess.length; i++){
+            let sc = lastSuccess[i];
+            if(!(sc.time + 20 > Math.floor(new Date().getTime()/1000))){
+                lastSuccess.slice(i,1);
+            }
+            if(sc.key === key && sc.time + 20 > Math.floor(new Date().getTime()/1000)){
+                lastSuccess.slice(i,1);
+                return true;
+            }
+        }
+        return false;
+    }
 
     function atob(data){
         return decodeURIComponent(Buffer.from(data, 'base64').toString());
@@ -56,7 +79,7 @@ module.exports = listen = (app) => {
             }
         }
 
-        res.send(200);
+        res.sendStatus(200);
     });
 
     app.get('/:key/broadcast/:data', function(req, res){
@@ -66,7 +89,7 @@ module.exports = listen = (app) => {
         
         eventBus.broadcast(key, data.event, data.data);
 
-        res.send(200);
+        res.sendStatus(200);
     });
     
     app.get('/:key/updates', function(req, res){
@@ -76,15 +99,15 @@ module.exports = listen = (app) => {
         req.on("close", () => {
             eventBus.terminate(key);
             clearTimeout(out);
-            setTimeout(() => {
-                if(!eventBus.contains(key)){
-                    callEvent("disconnect", key);
-                }
-            }, 500);
+            if(isSuccess(key)){
+                return;
+            }
+            callEvent("disconnect", key);
         });
         
         eventBus.wait(key, (data) => {
             clearTimeout(out);
+            pushSuccess(key, Math.floor(new Date().getTime()/1000));
             return res.send(btoa(JSON.stringify({
                 ts: Math.round((new Date().getTime()/1000)),
                 d: {
@@ -93,19 +116,8 @@ module.exports = listen = (app) => {
                 } 
             })));
         });
-        if(!eventBus.containsNoConnected(key)){
-            clearTimeout(out);
-            callEvent("connect", {
-                getKey: () => {
-                    return key;
-                },
-
-                send: (event, data) => {
-                    eventBus.call(key, event, data);
-                }
-            });
-        }
         out = setTimeout(() => {
+            pushSuccess(key, Math.floor(new Date().getTime()/1000));
             return res.send(btoa(JSON.stringify({
                 ts: Math.round((new Date().getTime()/1000)),
             })));
