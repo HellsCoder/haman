@@ -29,6 +29,7 @@ export default class Haman {
     public connect() : void {
         console.info("key connect " + this.key);
         this.longPoolBridge.connectWhile(this.eventBus);
+        this.send("connect", {});
     }
 
     public subscribe(event : string, callback : Function) : void {
