@@ -1,3 +1,5 @@
+const { connect } = require("http2");
+
 module.exports = EventBus = () => {
     
     const connectionsQueue = [];
@@ -13,24 +15,11 @@ module.exports = EventBus = () => {
             return false;
         },
 
-        containsNoConnected: (key) => {
-            for(let i = 0; i < connectionsQueue.length; i++){
-                let connection = connectionsQueue[i];
-                if(connection.key === key && connection.connected === false){
-                    return true;
-                }
-            }
-            return false;
-        },
-
         terminate: (key) => {
             for(let i = 0; i < connectionsQueue.length; i++){
                 let connection = connectionsQueue[i];
                 if(connection.key === key){
-                    connection.connected = false;
-                    setTimeout(() => {
-                        connectionsQueue.splice(i, 1);
-                    }, 500);
+                    connectionsQueue.slice(i, 1);
                 }
             }
         },
@@ -63,10 +52,28 @@ module.exports = EventBus = () => {
         },
 
         wait: (key, callback) => {
+
+            let containsConnect = (key) => {
+                for(let i = 0; i < connectionsQueue.length; i++){
+                    let connection = connectionsQueue[i];
+                    if(connection.key === key){
+                        return i;
+                    }
+                }
+                return false;
+            };
+
+            let i = containsConnect(key)
+            if(i !== false){
+                connectionsQueue[i].callback = callback;
+                connectionsQueue[i].time = Math.floor(new Date().getTime()/1000);
+                return;
+            }
+
             connectionsQueue.push({
                 key: key,
                 callback: callback,
-                connected: true
+                time: Math.floor(new Date().getTime()/1000)
             });
         }
     }
