@@ -22,10 +22,11 @@ module.exports = listen = (app) => {
     function isSuccess(key){
         for(let i = 0; i < lastSuccess.length; i++){
             let sc = lastSuccess[i];
-            if(!(sc.time + 20 > Math.floor(new Date().getTime()/1000))){
+            if(!(sc.time + 20 > Math.floor(new Date().getTime()))){
                 lastSuccess.slice(i,1);
+                continue;
             }
-            if(sc.key === key && sc.time + 20 > Math.floor(new Date().getTime()/1000)){
+            if(sc.key === key && sc.time + 20 > Math.floor(new Date().getTime())){
                 lastSuccess.slice(i,1);
                 return true;
             }
@@ -107,7 +108,7 @@ module.exports = listen = (app) => {
         
         eventBus.wait(key, (data) => {
             clearTimeout(out);
-            pushSuccess(key, Math.floor(new Date().getTime()/1000));
+            pushSuccess(key, Math.floor(new Date().getTime()));
             return res.send(btoa(JSON.stringify({
                 ts: Math.round((new Date().getTime()/1000)),
                 d: {
@@ -117,7 +118,7 @@ module.exports = listen = (app) => {
             })));
         });
         out = setTimeout(() => {
-            pushSuccess(key, Math.floor(new Date().getTime()/1000));
+            pushSuccess(key, Math.floor(new Date().getTime()));
             return res.send(btoa(JSON.stringify({
                 ts: Math.round((new Date().getTime()/1000)),
             })));
