@@ -1,8 +1,11 @@
 const config = require('./config');
+const { RSA_PKCS1_OAEP_PADDING } = require('constants');
+const { ifError } = require('assert');
 
 const eventBus = require('./connect/eventBus')();
 
 let lastSuccess = [];
+let dataQueue = [];
 
 /*
     app - express app with listening port
@@ -17,6 +20,36 @@ module.exports = listen = (app) => {
             lastSuccess = [];
         }
         lastSuccess.push({key: key, time: time});
+    }
+
+    function pushDataQueue(key, data){
+        if(dataQueue.length > 128){
+            dataQueue = [];
+        }
+        dataQueue.push({
+            key: key,
+            data: data
+        });
+    }
+
+    function getDataQueue(key){
+        for(let i = 0; i < dataQueue.length; i++){
+            let d = dataQueue[i];
+            if(d.key === key){
+                return d.data;
+            }
+        }
+        return false;
+    }
+
+    function removeDataInQueue(key){
+        for(let i = 0; i < dataQueue.length; i++){
+            let d = dataQueue[i];
+            if(d.key === key){
+                dataQueue.splice(i, 1);
+            }
+        }
+        return false;
     }
 
     function isSuccess(key){
@@ -105,10 +138,26 @@ module.exports = listen = (app) => {
             }
             callEvent("disconnect", key);
         });
+
+        let data = getDataQueue(key);
+        if(data !== false){
+            removeDataInQueue(key);
+            return res.send(btoa(JSON.stringify({
+                ts: Math.round((new Date().getTime()/1000)),
+                d: {
+                    e: data.event,
+                    dt: data.data
+                } 
+            })));
+        }
         
         eventBus.wait(key, (data) => {
             clearTimeout(out);
             pushSuccess(key, Math.floor(new Date().getTime()));
+            if(res.headersSent){
+                pushDataQueue(key, data);
+                return;
+            }
             return res.send(btoa(JSON.stringify({
                 ts: Math.round((new Date().getTime()/1000)),
                 d: {
