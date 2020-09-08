@@ -8,12 +8,13 @@ export default class Haman {
     private key : string;
     private eventBus : EventBus;
     private longPoolBridge : Bridge;
+    private logging : boolean = false;
 
     constructor(host : string){
         this.host = host;
         this.key = this.genKey();
         this.eventBus = new EventBus();
-        this.longPoolBridge = new Bridge(this.host, this.key);
+        this.longPoolBridge = new Bridge(this.host, this.key, this);
     }
 
     private genKey() : string {
@@ -27,7 +28,9 @@ export default class Haman {
     }
 
     public connect() : void {
-        console.info("key connect " + this.key);
+        if(this.isLogging()){
+            console.info("Haman-key connect " + this.key);
+        }
         this.longPoolBridge.connectWhile(this.eventBus);
         this.send("connect", {});
     }
@@ -35,8 +38,22 @@ export default class Haman {
     public subscribe(event : string, callback : Function) : void {
         this.eventBus.pushEvent(event, callback);
     }
+
+    public setLogging(logging : boolean){
+        this.logging = logging;        
+    }
+
+    public isLogging() : boolean {
+        return this.logging;
+    }
     
     public send(event : string, data: any) : void {
+        if(this.logging){
+            console.group('PacketSend');
+            console.info(event);
+            console.info(data);
+            console.groupEnd();
+        }
         let encoded = btoa(encodeURIComponent(JSON.stringify({event: event, data: data})));
         Net.process(this.host + '/' + this.key + '/push/' + encoded);
     }
