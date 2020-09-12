@@ -115,16 +115,6 @@ module.exports = listen = (app) => {
 
         res.sendStatus(200);
     });
-
-    app.get('/:key/broadcast/:data', function(req, res){
-        let key = req.params.key;
-
-        let data = JSON.parse(atob(req.params.data));
-        
-        eventBus.broadcast(key, data.event, data.data);
-
-        res.sendStatus(200);
-    });
     
     app.get('/:key/updates', function(req, res){
         let key = req.params.key;
