@@ -58,9 +58,4 @@ export default class Haman {
         Net.process(this.host + '/' + this.key + '/push/' + encoded);
     }
 
-    public broadcast(event : string, data: any) : void {
-        let encoded = btoa(encodeURIComponent(JSON.stringify({event: event, data: data})));
-        Net.process(this.host + '/' + this.key + '/broadcast/' + encoded);
-    }
-
 }
