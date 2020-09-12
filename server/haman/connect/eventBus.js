@@ -19,7 +19,7 @@ module.exports = EventBus = () => {
             for(let i = 0; i < connectionsQueue.length; i++){
                 let connection = connectionsQueue[i];
                 if(connection.key === key){
-                    connectionsQueue.slice(i, 1);
+                    connectionsQueue.splice(i, 1);
                 }
             }
         },
